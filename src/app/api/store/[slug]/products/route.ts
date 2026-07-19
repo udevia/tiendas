@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { getPrismaClient } from '@/lib/prisma'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
+    // 🌟 Ahora inicializamos Prisma aquí, solo en tiempo de ejecución
+    const prisma = getPrismaClient()
     const { slug } = await params
 
-    // Buscar la tienda y sus productos publicados
     const store = await prisma.store.findUnique({
       where: { slug },
       include: {

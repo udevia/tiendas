@@ -13,11 +13,11 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Variable ficticia solo para satisfacer a Prisma durante el build
+# Variable ficticia para que Prisma no se queje durante el build
 ENV DATABASE_URL="postgresql://user:password@localhost:5432/db"
 
-# Generar cliente de Prisma
-RUN npx prisma generate
+# Generar cliente con ruta explícita al esquema
+RUN npx prisma generate --schema=./prisma/schema.prisma
 
 # Construir la aplicación
 RUN npm run build
