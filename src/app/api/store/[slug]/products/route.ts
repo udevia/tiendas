@@ -12,23 +12,23 @@ export async function GET(
   try {
     const { slug } = await params
     
-    // Consulta directa, sin binarios, sin magia
-    const store = await db.query.stores.findFirst({
-      where: eq(stores.slug, slug),
-      with: {
-        products: {
-          where: eq(products.isPublished, true)
-        }
-      }
-    })
+    // 1. Buscar la tienda de forma directa y segura
+    const [store] = await db.select().from(stores).where(eq(stores.slug, slug))
 
     if (!store) {
       return NextResponse.json({ error: 'Tienda no encontrada' }, { status: 404 })
     }
 
-    return NextResponse.json({ store, products: store.products })
+    // 2. Buscar los productos publicados de esa tienda
+    const storeProducts = await db.select().from(products)
+      .where(and(eq(products.storeId, store.id), eq(products.isPublished, true)))
+
+    return NextResponse.json({ 
+      store: { name: store.name, currency: store.currency, slug: store.slug }, 
+      products: storeProducts 
+    })
   } catch (error) {
-    console.error('DB ERROR:', error)
+    console.error('DRIZZLE ERROR DETALLADO:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
