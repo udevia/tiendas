@@ -1,45 +1,95 @@
+import ProductCard from '@/components/ProductCard'
+
+export const dynamic = 'force-dynamic'
+
+interface Product {
+  id: string
+  name: string
+  price: string
+  stock: number
+}
+
+interface Store {
+  name: string
+  currency: string
+}
+
 export default async function Home() {
-  // Fetch directo a nuestra API interna (usamos localhost:3002 porque así está expuesto en Docker)
   const res = await fetch('http://localhost:3002/api/store/tienda-demo/products', {
-    cache: 'no-store', // Para ver los cambios en tiempo real
+    cache: 'no-store',
   })
   
-  const data = await res.json()
-
-  if (!res.ok || !data.store) {
+  if (!res.ok) {
     return (
-      <main className="min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-red-600 text-xl">Error cargando la tienda. Verifica que el seed se ejecutó.</p>
-      </main>
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-red-600 text-xl">Error cargando la tienda</p>
+      </div>
     )
   }
 
-  return (
-    <main className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-5xl mx-auto">
-        <header className="mb-8 border-b pb-4">
-          <h1 className="text-4xl font-bold text-purple-700">{data.store.name}</h1>
-          <p className="text-gray-600 mt-2">Bienvenido a nuestra tienda demo. Moneda: {data.store.currency}</p>
-        </header>
+  const data = await res.json()
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {data.products.map((product: any) => (
-            <div key={product.id} className="bg-white p-6 rounded-xl shadow-md border hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-              <h2 className="text-xl font-semibold mb-2 text-gray-800">{product.name}</h2>
-              <p className="text-3xl font-bold text-purple-600 mb-4">
-                {data.store.currency} {Number(product.price).toFixed(2)}
-              </p>
-              <div className="flex items-center justify-between mt-4">
-                <span className={`text-sm px-3 py-1 rounded-full font-medium ${
-                  product.stock > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                }`}>
-                  {product.stock > 0 ? `${product.stock} en stock` : 'Agotado'}
-                </span>
-              </div>
-            </div>
+  return (
+    <>
+      {/* Hero Section */}
+      <section className="bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 text-white">
+        <div className="max-w-7xl mx-auto px-4 py-20">
+          <div className="text-center">
+            <h1 className="text-5xl md:text-6xl font-bold mb-6">
+              {data.store.name}
+            </h1>
+            <p className="text-xl md:text-2xl mb-8 opacity-90">
+              Productos únicos, calidad garantizada
+            </p>
+            <a 
+              href="#productos" 
+              className="inline-block bg-white text-purple-600 px-8 py-3 rounded-full font-bold hover:bg-gray-100 transition-colors"
+            >
+              Ver Productos
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Productos */}
+      <section id="productos" className="max-w-7xl mx-auto px-4 py-16">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl font-bold text-gray-800 mb-4">
+            Nuestros Productos
+          </h2>
+          <p className="text-gray-600 text-lg">
+            Descubre nuestra selección exclusiva
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {data.products.map((product: Product) => (
+            <ProductCard 
+              key={product.id} 
+              product={product} 
+              store={data.store} 
+            />
           ))}
         </div>
-      </div>
-    </main>
+      </section>
+
+      {/* CTA */}
+      <section className="bg-gray-900 text-white py-16">
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            ¿Quieres tu propia tienda online?
+          </h2>
+          <p className="text-xl text-gray-300 mb-8">
+            Crea tu vitrina digital en minutos
+          </p>
+          <a 
+            href="#" 
+            className="inline-block bg-gradient-to-r from-purple-600 to-pink-500 text-white px-8 py-3 rounded-full font-bold hover:opacity-90 transition-opacity"
+          >
+            Comenzar Gratis
+          </a>
+        </div>
+      </section>
+    </>
   )
 }
