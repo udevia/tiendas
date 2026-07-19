@@ -1,48 +1,28 @@
-FROM node:20-alpine AS base
+FROM node:20-alpine
 
-# 1. Dependencias
-FROM base AS deps
 WORKDIR /app
+
+# 1. Instalar dependencias
 COPY package.json package-lock.json* ./
 RUN npm ci
 
-# 2. Construcción
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+# 2. Copiar el resto del código
 COPY . .
 
-# Generar cliente de Prisma (necesita el esquema)
+# 3. Generar el cliente de Prisma y construir la app
 RUN npx prisma generate
-
-# Construir la aplicación
 RUN npm run build
 
-# 3. Producción (Sin standalone, más estable para Prisma)
-FROM base AS runner
-WORKDIR /app
-ENV NODE_ENV production
-
-# Crear usuario no-root por seguridad
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nextjs -u 1001
-
-# Copiar archivos públicos
-COPY --from=builder /app/public ./public
-
-# Copiar TODOS los node_modules (incluyendo Prisma completo)
-COPY --from=builder /app/node_modules ./node_modules
-
-# Copiar la aplicación compilada
-COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
-COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/package.json ./package.json
+# 4. Configurar entorno de producción y permisos
+ENV NODE_ENV=production
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+RUN chown -R nextjs:nodejs /app
 
 USER nextjs
 
 EXPOSE 3002
-ENV PORT 3002
-ENV HOSTNAME "0.0.0.0"
+ENV PORT=3002
+ENV HOSTNAME="0.0.0.0"
 
-# Usar el comando start normal de Next.js
 CMD ["npm", "start"]
